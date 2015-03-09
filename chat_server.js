@@ -4,7 +4,7 @@ var app = require('express')();
 var server = http.createServer(app)
 
 
-server.listen(81);
+server.listen(3001);
 
 app.use(function (req, res, next) {
         res.setHeader('Access-Control-Allow-Origin', "http://"+req.headers.host+':8000');
@@ -87,3 +87,4 @@ function sendMessage(message) {
 	}
 	return false;
 }
+
