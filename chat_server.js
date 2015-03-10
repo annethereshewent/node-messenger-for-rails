@@ -4,7 +4,7 @@ var app = require('express')();
 var server = http.createServer(app)
 
 
-server.listen(process.env.port || 3001);
+server.listen(process.env.PORT || 3001);
 
 app.use(function (req, res, next) {
         res.setHeader('Access-Control-Allow-Origin', "http://blogger-243.herokuapp.com");
