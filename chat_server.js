@@ -27,6 +27,7 @@ io.on('connection', function(socket) {
 		console.log("user has disconnected");
 		for (var i = 0; i < users.length; i ++) {
 			if (users[i].username == nickname) {
+				console.log("removing user from list");
 				users.splice(i,1);
 				break;
 			}
@@ -77,14 +78,14 @@ io.on('connection', function(socket) {
 });
 
 function sendMessage(message) {
-
+	var messageSent = false;
 	for (var i = 0; i < users.length; i++) {
 		if (users[i].username == message.to) {
-			console.log(users[i].username);
+			console.log("sending message to: " + users[i].username + ", socket id: " + users[i].socket.id);
 			users[i].socket.emit('message', message);
-			return true;
+			messageSent = true;
 		}
 	}
-	return false;
+	return messageSent
 }
 
