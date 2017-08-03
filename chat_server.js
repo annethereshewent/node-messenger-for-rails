@@ -63,6 +63,15 @@ io.on('connection', function(socket) {
 			socket: socket
 		});
 
+		//remove any duplicates that may exist
+
+		for (var i = 0; i < users.length; i++) {
+			if (users[i].username == user.username && users[i].socket.id != socket.id) {
+				console.log('duplicate found, removing socket with id ' + users[i].socket.id + ". Current socket's ID: " + socket.id)
+				users.splice[i,1];
+			}
+		}
+
 		
 
 		console.log("user " + user.username + " has signed on");
