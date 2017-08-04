@@ -9,9 +9,6 @@ var time = require('time')(Date);
 var url = process.env.DATABASE_URL;
 
 
-
-
-
 server.listen(process.env.PORT || 3001);
 
 app.use(function (req, res, next) {
@@ -86,7 +83,7 @@ io.on('connection', function(socket) {
 	socket.on('history_request', function(message) {
 		connect_db(function(db) {
 			console.log("request for logs received, attempting to send them...");
-			chatHistory(message.to, message.from, db, function(chat_logs) {
+			chatHistory(message.toid, message.fromid, db, function(chat_logs) {
 				console.log('chat logs reversed:');
 				console.log(chat_logs);
 
@@ -159,9 +156,11 @@ function insertRecord(record, db, callback) {
 
 	date.setTimezone('America/Los_Angeles');
 
+	console.log(record);
+
 	collection.insert({
-		to: record.to,
-		from: record.from,
+		to: record.toid,
+		from: record.fromid,
 		message: record.content,
 		sent_at: date
 	}, 
@@ -176,27 +175,26 @@ function insertRecord(record, db, callback) {
 }
 
 function chatHistory(user1, user2, db, callback) {
-	console.log("attempting to fetch chat history....");
 	//console.log(db.collection('chat_logs'));
 	db.collection('chat_logs').find({
 		$or: [
 			{
 				$and: [
-					{to: user1},
-					{from: user2}
+					{to: parseInt(user1)},
+					{from: parseInt(user2)}
 				]
 
 			},
 			{
 				$and: [
-					{to: user2},
-					{from: user1}
+					{to: parseInt(user2)},
+					{from: parseInt(user1)}
 				]
 			}
 		]
 	})
 	.sort({sent_at: -1})
-	.limit(50)
+	.limit(25)
 	.toArray(function(err, results) {
 		if (err == null) {
 			console.log(results);
