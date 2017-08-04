@@ -6,7 +6,7 @@ var MongoClient = require('mongodb').MongoClient;
 var time = require('time')(Date);
 
 
-var url = process.env.NODE_ENV == 'development' ? 'mongodb://localhost:27017/blogger' : 'mongodb://heroku_cbslmh5x:m950ufunlkmupd62objrdnkqmp@ds137749.mlab.com:37749/heroku_cbslmh5x';
+var url = process.env.DATABASE_URL;
 
 
 
