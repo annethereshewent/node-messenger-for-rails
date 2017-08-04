@@ -32,17 +32,28 @@ io.on('connection', function(socket) {
 	var av = '';
 
 
-
+ 
 	socket.on('disconnect', function() {
 		console.log("user has disconnected");
 		for (var i = 0; i < users.length; i ++) {
-			if (users[i].username == nickname) {
+			if (users[i].socket.id == socket.id) {
 				console.log("removing user from list");
 				users.splice(i,1);
 				break;
 			}
 		}
-		io.emit('logout', nickname);
+
+		//only emit a logout if the user has no more active sockets open
+		var found = false;
+		for (var i = 0; i < users.length; i++) {
+			if (users[i].username == nickname) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			io.emit('logout', nickname);
+		}
 	});
 
 	socket.on('list', function() {
@@ -87,7 +98,6 @@ io.on('connection', function(socket) {
 							to: message.to,
 							chat_logs: chat_logs
 						});
-						break;
 					} 
 				}
 			});
@@ -108,14 +118,13 @@ io.on('connection', function(socket) {
 
 		//remove any duplicates that may exist
 
-		for (var i = 0; i < users.length; i++) {
-			if (users[i].username == user.username && users[i].socket.id != socket.id) {
-				console.log("\x1b[31m", 'duplicate found, removing socket with id ' + users[i].socket.id + ". Current socket's ID: " + socket.id)
-				console.log("\x1b[0m", '');
-				users.splice[i,1];
-				break;
-			}
-		}
+		// for (var i = 0; i < users.length; i++) {
+		// 	if (users[i].username == user.username && users[i].socket.id != socket.id) {
+		// 		console.log("\x1b[31m", 'duplicate found, removing socket with id ' + users[i].socket.id + ". Current socket's ID: " + socket.id)
+		// 		console.log("\x1b[0m", '');
+		// 		users.splice(i,1);	
+		// 	}
+		// }
 
 		
 
@@ -138,7 +147,6 @@ function sendMessage(message) {
 			console.log("sending message to: " + users[i].username + ", socket id: " + users[i].socket.id);
 			users[i].socket.emit('message', message);
 			messageSent = true;
-			break;
 		}
 	}
 	return messageSent
