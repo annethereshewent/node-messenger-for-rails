@@ -157,6 +157,7 @@ function insertRecord(record, db, callback) {
 	date.setTimezone('America/Los_Angeles');
 
 	console.log(record);
+	
 
 	collection.insert({
 		to: record.toid,
