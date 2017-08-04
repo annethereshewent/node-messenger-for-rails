@@ -113,6 +113,7 @@ io.on('connection', function(socket) {
 				console.log("\x1b[31m", 'duplicate found, removing socket with id ' + users[i].socket.id + ". Current socket's ID: " + socket.id)
 				console.log("\x1b[0m", '');
 				users.splice[i,1];
+				break;
 			}
 		}
 
@@ -137,6 +138,7 @@ function sendMessage(message) {
 			console.log("sending message to: " + users[i].username + ", socket id: " + users[i].socket.id);
 			users[i].socket.emit('message', message);
 			messageSent = true;
+			break;
 		}
 	}
 	return messageSent
