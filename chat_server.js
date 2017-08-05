@@ -37,9 +37,6 @@ app.use(express.static('public'));
 if (process.env.NODE_ENV == 'production') {
 	s3 = new AWS.S3();
 }
-else {
-	
-}
 
 
 var io = require('socket.io').listen(server);
@@ -112,27 +109,29 @@ io.on('connection', function(socket) {
 					sendMessage(message);
 				});
 			}
-			else {
-				
+			else {				
 				//production, need to use s3 because files do not persist on heroku
-				s3.putObject({
-					Bucket: process.env.AWS_BUCKET_NAME,
-					Key: blank_file,
-					ContentType: 'image/' + message.extension,
-					Body: message.content
-				},
-				function(err, data) {
-					if (err) {
-						console.log(err)
-					}
-					else {
-						console.log('file uploaded to s3 successfully');
-						//need to construct the url
-						message.content = getS3Url(blank_file);
+				fs.writeFile(blank_file, function() {
+					s3.putObject({
+						Bucket: process.env.AWS_BUCKET_NAME,
+						Key: blank_file,
+						ContentType: 'image/' + message.extension,
+						SourceFile: blank_file,
+					},
+					function(err, data) {
+						if (err) {
+							console.log(err)
+						}
+						else {
+							console.log('file uploaded to s3 successfully');
+							//need to construct the url
+							message.content = getS3Url(blank_file);
 
-						sendMessage(message);
-					}
+							sendMessage(message);
+						}
+					})
 				})
+				
 			}
 		}
 	})
