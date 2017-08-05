@@ -103,8 +103,7 @@ io.on('connection', function(socket) {
 				fs.writeFile(blank_file, message.content, 'binary', function() {
 					//finished writing file, send the message using the standard function. can differentiate at client using the .type element
 					var image_url = server_host + '/' + blank_file.split('public/')[1];
-					message.content =  '<a href="' + image_url + '"><img src="' + image_url + '" class="chat-image-file"></a>';
-					console.log(message.content)
+					message.content =  getImageHtml(image_url);
 					
 					sendMessage(message);
 				});
@@ -126,13 +125,11 @@ io.on('connection', function(socket) {
 						console.log('file uploaded to s3 successfully');
 						var s3_url = getS3Url(blank_file);
 						//need to construct the url
-						message.content = '<a href="' + s3_url + '"><img src="' + s3_url + '" class="chat-image-file"></a>';
+						message.content = getImageHtml(s3_url);
 
 						sendMessage(message);
 					}
-				})
-
-				
+				})				
 			}
 		}
 	})
@@ -154,10 +151,7 @@ io.on('connection', function(socket) {
 						});
 					} 
 				}
-			});
-	
-
-			
+			});	
 		})
 	})
 	socket.on('login', function(user) {
@@ -291,4 +285,8 @@ function getS3Url(file) {
 
 	return 'https://s3-' + process.env.AWS_REGION + '.amazonaws.com/' + process.env.AWS_BUCKET_NAME + '/' + file;
 
+}
+
+function getImageHtml(img_src) {
+	return '<a href="' + img_src + '"><img src="' + img_src + '" class="chat-image-file"></a>';
 }
