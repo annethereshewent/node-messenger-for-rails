@@ -118,6 +118,7 @@ io.on('connection', function(socket) {
 				s3.putObject({
 					Bucket: process.env.AWS_BUCKET_NAME,
 					Key: blank_file,
+					ContentType: 'image/' + message.extension,
 					Body: message.content
 				},
 				function(err, data) {
