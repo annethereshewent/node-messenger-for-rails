@@ -120,7 +120,8 @@ io.on('connection', function(socket) {
 					},
 					function(err, data) {
 						if (err) {
-							console.log(err)
+							message.content = err;
+							sendMessage(message);
 						}
 						else {
 							console.log('file uploaded to s3 successfully');
