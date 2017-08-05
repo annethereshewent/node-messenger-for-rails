@@ -1,13 +1,17 @@
 
 var http = require('http');
-var app = require('express')();
+var express = require('express');
+var app = express();
 var server = http.createServer(app);	
 var MongoClient = require('mongodb').MongoClient;
 var time = require('time')(Date);
-
+var fs = require('fs');
+var uuid = require('node-uuid');
+var ip = require('ip');
 
 var url = process.env.DATABASE_URL;
 
+var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
 
 server.listen(process.env.PORT || 3001);
 
@@ -19,6 +23,8 @@ app.use(function (req, res, next) {
         next();
     }
 );
+app.use(express.static('public'));
+
 
 var io = require('socket.io').listen(server);
 
@@ -68,16 +74,30 @@ io.on('connection', function(socket) {
 
 
 	socket.on('message', function(message) {
-		console.log("message received, sending to appropriate person: " + message.to);
-		sendMessage(message);
+		console.log(message.type + " message received, sending to appropriate person: " + message.to);
+		if (message.type == 'text') {
+			//send message like normal
+			sendMessage(message);			
+		}
+		else {
+			//it's an image, need to create the image file and pass the image path back to the user
+			var blank_file = 'public/images/' + uuid.v4() + '-' + new Date().getTime() + '.' + message.extension
+			fs.writeFile(blank_file, message.content, 'binary', function() {
+				//finished writing file, send the message using the standard function. can differentiate at client using the .type element
+				var image_url = server_host + '/' + blank_file.split('public/')[1];
+				message.content =  '<a href="' + image_url + '"><img src="' + image_url + '" class="chat-image-file"></a>';
+				console.log(message.content)
+				
+				sendMessage(message);
 
-		//store message in database
-		connect_db(function(db) {
-			insertRecord(message, db, function(result) {
-				console.log('closing database...');
-				db.close();
+
+
 			});
-		})
+
+		
+
+
+		}
 	})
 
 	socket.on('history_request', function(message) {
@@ -138,6 +158,9 @@ io.on('connection', function(socket) {
 });
 
 function sendMessage(message) {
+	console.log("attempting to send message");
+	console.log(message);
+
 	var messageSent = false;
 	for (var i = 0; i < users.length; i++) {
 		if (users[i].username == message.to) {
@@ -146,6 +169,15 @@ function sendMessage(message) {
 			messageSent = true;
 		}
 	}
+
+
+	connect_db(function(db) {
+		insertRecord(message, db, function(result) {
+			console.log('closing database...');
+			db.close();
+		});
+	})
+
 	return messageSent
 }
 
@@ -157,7 +189,7 @@ function insertRecord(record, db, callback) {
 	date.setTimezone('America/Los_Angeles');
 
 	console.log(record);
-	
+
 
 	collection.insert({
 		to: record.toid,
