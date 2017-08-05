@@ -138,8 +138,8 @@ io.on('connection', function(socket) {
 		connect_db(function(db) {
 			console.log("request for logs received, attempting to send them...");
 			chatHistory(message.toid, message.fromid, db, function(chat_logs) {
-				console.log('chat logs reversed:');
-				console.log(chat_logs);
+				//console.log('chat logs reversed:');
+				//console.log(chat_logs);
 
 				//send the chat logs back to the requesting user, which is in message.from
 
@@ -219,7 +219,7 @@ function insertRecord(record, db, callback) {
 
 	date.setTimezone('America/Los_Angeles');
 
-	console.log(record);
+	//console.log(record);
 
 
 	collection.insert({
@@ -261,7 +261,7 @@ function chatHistory(user1, user2, db, callback) {
 	.limit(25)
 	.toArray(function(err, results) {
 		if (err == null) {
-			console.log(results);
+			//console.log(results);
 			callback(results.reverse());
 		}
 	})
