@@ -120,7 +120,7 @@ io.on('connection', function(socket) {
 					},
 					function(err, data) {
 						if (err) {
-							message.content = err;
+							message.content = err.message;
 							sendMessage(message);
 						}
 						else {
