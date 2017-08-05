@@ -124,8 +124,9 @@ io.on('connection', function(socket) {
 					}
 					else {
 						console.log('file uploaded to s3 successfully');
+						var s3_url = getS3Url(blank_file);
 						//need to construct the url
-						message.content = getS3Url(blank_file);
+						message.content = '<a href="' + s3_url + '"><img src="' + s3_url + '" class="chat-image-file"></a>';
 
 						sendMessage(message);
 					}
@@ -288,6 +289,6 @@ function connect_db(callback) {
 function getS3Url(file) {
 	//given the bucket name, region, and file, we can construct the url ourselves
 
-	return 'https://' + process.env.AWS_REGION + '.amazonaws.com/' + process.env.AWS_BUCKET_NAME + '/' + file;
+	return 'https://s3-' + process.env.AWS_REGION + '.amazonaws.com/' + process.env.AWS_BUCKET_NAME + '/' + file;
 
 }
