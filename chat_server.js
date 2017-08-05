@@ -8,10 +8,17 @@ var time = require('time')(Date);
 var fs = require('fs');
 var uuid = require('node-uuid');
 var ip = require('ip');
+var AWS = require('aws-sdk');
+
+var s3;
 
 var url = process.env.DATABASE_URL;
 
-var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
+//var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
+
+//development uses server_host for image uploads, production uses client for s3 uploads
+var server_host = 'http://' + ip.address() + ':3001';
+
 
 server.listen(process.env.PORT || 3001);
 
@@ -24,6 +31,15 @@ app.use(function (req, res, next) {
     }
 );
 app.use(express.static('public'));
+
+
+
+if (process.env.NODE_ENV == 'production') {
+	s3 = new AWS.S3();
+}
+else {
+	
+}
 
 
 var io = require('socket.io').listen(server);
@@ -81,22 +97,42 @@ io.on('connection', function(socket) {
 		}
 		else {
 			//it's an image, need to create the image file and pass the image path back to the user
-			var blank_file = 'public/images/' + uuid.v4() + '-' + new Date().getTime() + '.' + message.extension
-			fs.writeFile(blank_file, message.content, 'binary', function() {
-				//finished writing file, send the message using the standard function. can differentiate at client using the .type element
-				var image_url = server_host + '/' + blank_file.split('public/')[1];
-				message.content =  '<a href="' + image_url + '"><img src="' + image_url + '" class="chat-image-file"></a>';
-				console.log(message.content)
+
+			var blank_file = uuid.v4() + '-' + new Date().getTime() + '.' + message.extension;;
+
+			if (process.env.NODE_ENV == 'development') {
+				//development, create image locally and send url back to user.
+				blank_file = 'public/images/' + blank_file;
+				fs.writeFile(blank_file, message.content, 'binary', function() {
+					//finished writing file, send the message using the standard function. can differentiate at client using the .type element
+					var image_url = server_host + '/' + blank_file.split('public/')[1];
+					message.content =  '<a href="' + image_url + '"><img src="' + image_url + '" class="chat-image-file"></a>';
+					console.log(message.content)
+					
+					sendMessage(message);
+				});
+			}
+			else {
 				
-				sendMessage(message);
+				//production, need to use s3 because files do not persist on heroku
+				s3.putObject({
+					Bucket: process.env.AWS_BUCKET_NAME,
+					Key: blank_file,
+					Body: message.content
+				},
+				function(err, data) {
+					if (err) {
+						console.log(err)
+					}
+					else {
+						console.log('file uploaded to s3 successfully');
+						//need to construct the url
+						message.content = getS3Url(blank_file);
 
-
-
-			});
-
-		
-
-
+						sendMessage(message);
+					}
+				})
+			}
 		}
 	})
 
@@ -246,5 +282,12 @@ function connect_db(callback) {
 			console.log(err)
 		}
 	})
+
+}
+
+function getS3Url(file) {
+	//given the bucket name, region, and file, we can construct the url ourselves
+
+	return 'https://' + process.env.AWS_REGION + '.amazonaws.com/' + process.env.AWS_BUCKET_NAME + '/' + file;
 
 }
