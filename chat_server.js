@@ -12,7 +12,7 @@ var AWS = require('aws-sdk');
 
 var s3;
 
-var url = process.env.DATABASE_URL;
+var url = process.env.NODE_DATABASE_URL;
 
 //var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
 
