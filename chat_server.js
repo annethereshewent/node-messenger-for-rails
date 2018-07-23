@@ -8,11 +8,14 @@ var time = require('time')(Date);
 var fs = require('fs');
 var uuid = require('node-uuid');
 var ip = require('ip');
+var colors = require('colors');
 var AWS = require('aws-sdk');
 
 var s3;
 
 var url = process.env.NODE_DATABASE_URL;
+
+
 
 //var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
 
@@ -42,6 +45,30 @@ if (process.env.NODE_ENV == 'production') {
 var io = require('socket.io').listen(server);
 
 var users = [];
+
+// connect_db(function(db) {
+// 	db.collection('chat_logs').find({
+// 		message: /10.0.0.135/
+// 	})
+// 	.toArray()
+// 	.then(function(wrong_chat_logs) {
+// 		for (var i = 0; i < wrong_chat_logs.length; i++) {
+// 			var new_message = wrong_chat_logs[i].message.replace(/10.0.0.135/g, '10.0.0.136');
+// 			console.log(new_message);
+// 			try {
+// 				db.collection('chat_logs').update(
+// 					{ _id: wrong_chat_logs[i]._id},
+// 					{ $set: { message: new_message} }
+// 				)
+// 			}
+// 			catch (e) {
+// 				console.log(e);
+// 			}
+// 		}
+// 	})
+
+	
+// })
 
 io.on('connection', function(socket) {
 	var nickname = '';

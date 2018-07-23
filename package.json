@@ -13,8 +13,13 @@
   "author": "Anne Castrillon",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.130.0",
+    "colors": "^1.1.2",
     "express": "^4.12.2",
+    "ip": "^1.1.5",
     "mongodb": "^2.2.30",
-    "socket.io": "^1.3.5"
+    "node-uuid": "^1.4.8",
+    "socket.io": "^1.3.5",
+    "time": "^0.12.0"
   }
 }
