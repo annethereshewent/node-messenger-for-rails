@@ -172,6 +172,7 @@ io.on('connection', function(socket) {
 
 				for (var i = 0; i < users.length; i++) {
 					if (users[i].username == message.from) {
+						console.log("emitting chat_logs to " + users[i].socket.id)
 						users[i].socket.emit('chat_history', {
 							to: message.to,
 							chat_logs: chat_logs
