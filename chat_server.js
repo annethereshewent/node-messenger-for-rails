@@ -1,38 +1,35 @@
 
-var http = require('http');
-var express = require('express');
-var app = express();
-var server = http.createServer(app);	
-var MongoClient = require('mongodb').MongoClient;
-var time = require('time')(Date);
-var fs = require('fs');
-var uuid = require('node-uuid');
-var ip = require('ip');
-var colors = require('colors');
-var AWS = require('aws-sdk');
+const http = require('http'),
+ 	  express = require('express'),
+  	  app = express(),
+      server = http.createServer(app),
+      MongoClient = require('mongodb').MongoClient,
+      time = require('time')(Date),
+      fs = require('fs'),
+      uuid = require('node-uuid'),
+      colors = require('colors'),
+      AWS = require('aws-sdk');
 
-var s3;
+let s3;
 
-var url = process.env.NODE_DATABASE_URL;
+let url = process.env.NODE_DATABASE_URL;
 
+let timeout = 0
 
+let server_host = 'http://localhost:3001';
 
-//var server_host = process.env.NODE_ENV == 'development' ? 'http://' + ip.address() + ':3001' : 'http://blogger243chat.herokuapp.com'
-
-//development uses server_host for image uploads, production uses client for s3 uploads
-var server_host = 'http://' + ip.address() + ':3001';
-
+let current_time = new Date().getTime()
 
 server.listen(process.env.PORT || 3001);
 
 app.use(function (req, res, next) {
-        res.setHeader('Access-Control-Allow-Origin', "http://blogger-243.herokuapp.com");
+    res.setHeader('Access-Control-Allow-Origin', "http://blogger-243.herokuapp.com");
 
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-        next();
-    }
-);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    next();
+});
+
 app.use(express.static('public'));
 
 
@@ -42,18 +39,18 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 
-var io = require('socket.io').listen(server);
+let io = require('socket.io').listen(server);
 
-var users = [];
+let users = [];
 
-// connect_db(function(db) {
+// connect_db(funection(db) {
 // 	db.collection('chat_logs').find({
 // 		message: /10.0.0.135/
 // 	})
 // 	.toArray()
 // 	.then(function(wrong_chat_logs) {
-// 		for (var i = 0; i < wrong_chat_logs.length; i++) {
-// 			var new_message = wrong_chat_logs[i].message.replace(/10.0.0.135/g, '10.0.0.136');
+// 		for (let i = 0; i < wrong_chat_logs.length; i++) {
+// 			let new_message = wrong_chat_logs[i].message.replace(/10.0.0.135/g, '10.0.0.136');
 // 			console.log(new_message);
 // 			try {
 // 				db.collection('chat_logs').update(
@@ -71,14 +68,15 @@ var users = [];
 // })
 
 io.on('connection', function(socket) {
-	var nickname = '';
-	var av = '';
+	let nickname = '';
+	let av = '';
+	let user_id = null;
 
 
  
 	socket.on('disconnect', function() {
 		console.log("user has disconnected");
-		for (var i = 0; i < users.length; i ++) {
+		for (let i = 0; i < users.length; i ++) {
 			if (users[i].socket.id == socket.id) {
 				console.log("removing user from list");
 				users.splice(i,1);
@@ -87,8 +85,8 @@ io.on('connection', function(socket) {
 		}
 
 		//only emit a logout if the user has no more active sockets open
-		var found = false;
-		for (var i = 0; i < users.length; i++) {
+		let found = false;
+		for (let i = 0; i < users.length; i++) {
 			if (users[i].username == nickname) {
 				found = true;
 				break;
@@ -104,10 +102,11 @@ io.on('connection', function(socket) {
 		io.emit('list');
 
 
-		io.emit('user-list', {
-			username: nickname,
-			avatar: av
-		});
+		// io.emit('user-list', {
+		// 	username: nickname,
+		// 	avatar: av,
+		// 	user_id: user_id
+		// });
 			
 
 	});
@@ -122,14 +121,14 @@ io.on('connection', function(socket) {
 		else {
 			//it's an image, need to create the image file and pass the image path back to the user
 
-			var blank_file = uuid.v4() + '-' + new Date().getTime() + '.' + message.extension;;
+			let blank_file = uuid.v4() + '-' + new Date().getTime() + '.' + message.extension;;
 
 			if (process.env.NODE_ENV == 'development') {
 				//development, create image locally and send url back to user.
 				blank_file = 'public/images/' + blank_file;
 				fs.writeFile(blank_file, message.content, 'binary', function() {
 					//finished writing file, send the message using the standard function. can differentiate at client using the .type element
-					var image_url = server_host + '/' + blank_file.split('public/')[1];
+					let image_url = `${server_host}/${blank_file.split('public/')[1]}`;
 					message.content =  getImageHtml(image_url);
 					
 					sendMessage(message);
@@ -150,7 +149,7 @@ io.on('connection', function(socket) {
 					}
 					else {
 						console.log('file uploaded to s3 successfully');
-						var s3_url = getS3Url(blank_file);
+						let s3_url = getS3Url(blank_file);
 						//need to construct the url
 						message.content = getImageHtml(s3_url);
 
@@ -170,7 +169,7 @@ io.on('connection', function(socket) {
 
 				//send the chat logs back to the requesting user, which is in message.from
 
-				for (var i = 0; i < users.length; i++) {
+				for (let i = 0; i < users.length; i++) {
 					if (users[i].username == message.from) {
 						console.log("emitting chat_logs to " + users[i].socket.id)
 						users[i].socket.emit('chat_history', {
@@ -186,6 +185,7 @@ io.on('connection', function(socket) {
 		console.log('login request received');
 		nickname = user.username;
 		av = user.avatar;
+		user_id = user.user_id;
 
 		users.push({
 			username: user.username,
@@ -194,7 +194,7 @@ io.on('connection', function(socket) {
 
 		//remove any duplicates that may exist
 
-		// for (var i = 0; i < users.length; i++) {
+		// for (let i = 0; i < users.length; i++) {
 		// 	if (users[i].username == user.username && users[i].socket.id != socket.id) {
 		// 		console.log("\x1b[31m", 'duplicate found, removing socket with id ' + users[i].socket.id + ". Current socket's ID: " + socket.id)
 		// 		console.log("\x1b[0m", '');
@@ -210,8 +210,20 @@ io.on('connection', function(socket) {
 		
 	});
 
-	socket.on('user-list', function(user) {
-		socket.broadcast.emit('user-list', user);
+	socket.on('user-list', (user) => {
+		let time_difference = new Date().getTime() - current_time
+		current_time = new Date().getTime()
+		setTimeout(() => {
+			console.log(`broadcasting ${user.username}`)
+			socket.broadcast.emit('user-list', user);	
+		}, timeout)
+
+		if (time_difference < 2000 || timeout == 0) {
+			timeout = timeout + 2000
+		}
+		else {
+			timeout = 0
+		}
 	});
 
 });
@@ -220,8 +232,8 @@ function sendMessage(message) {
 	console.log("attempting to send message");
 	console.log(message);
 
-	var messageSent = false;
-	for (var i = 0; i < users.length; i++) {
+	let messageSent = false;
+	for (let i = 0; i < users.length; i++) {
 		if (users[i].username == message.to) {
 			console.log("sending message to: " + users[i].username + ", socket id: " + users[i].socket.id);
 			users[i].socket.emit('message', message);
@@ -229,6 +241,7 @@ function sendMessage(message) {
 		}
 	}
 
+	console.log(messageSent ? "message was sent successfully" : "message was not sent");
 
 	connect_db(function(db) {
 		insertRecord(message, db, function(result) {
@@ -241,7 +254,7 @@ function sendMessage(message) {
 }
 
 function insertRecord(record, db, callback) {
-	var collection = db.collection('chat_logs')
+	let collection = db.collection('chat_logs')
 
 	date = new Date();
 
