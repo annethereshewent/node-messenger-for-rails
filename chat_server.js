@@ -19,7 +19,12 @@ let server_host = 'http://localhost:3001';
 
 let current_time = new Date().getTime()
 
-server.listen(process.env.PORT || 3001);
+const port = process.env.CHAT_SERVER_PORT || 3001;
+
+process.env.TZ = 'America/Los_Angeles'
+
+server.listen(port);
+
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', "http://blogger-243.herokuapp.com");
@@ -232,6 +237,8 @@ function sendMessage(message) {
 	console.log(message);
 
 	let messageSent = false;
+
+	console.log(users);
 	for (let i = 0; i < users.length; i++) {
 		if (users[i].username == message.to) {
 			console.log("sending message to: " + users[i].username + ", socket id: " + users[i].socket.id);
@@ -256,11 +263,6 @@ function insertRecord(record, db, callback) {
 	let collection = db.collection('chat_logs')
 
 	date = new Date();
-
-	date.setTimezone('America/Los_Angeles');
-
-	//console.log(record);
-
 
 	collection.insert({
 		to: record.toid,
