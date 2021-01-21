@@ -19,7 +19,7 @@
     "ip": "^1.1.5",
     "mongodb": "^2.2.30",
     "node-uuid": "^1.4.8",
-    "socket.io": "^1.7.4"
+    "socket.io": "^2.4.0"
   },
   "engines": {
     "node": "8.9.1",
